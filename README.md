@@ -56,3 +56,46 @@ Add this to your `pyproject.toml` to configure ruff:
 [tool.ruff]
 select = ["E", "F", "I", "N"]
 ```
+
+## 4. Automate development tasks
+
+I like to automate all the tooling for development, so I can run them as frequently as possible very easily.
+
+There are a few different ways to do this but the nicest I have found so far when building a project with Poetry is called [Poe](https://github.com/nat-n/poethepoet).
+
+There are a few options for installing poe (see the docs). You can install it globally using `pipx` or `pip` and then run it using `poe` in your terminal.
+
+Or you can install it *within* this project, and you can use `poe` in your terminal if you have this project's virtual environment activated (`poetry shell`), or using poetry to execute it inside the environemnt with `poetry run poe`.
+
+Let's install it inside this project (but you might prefer to do it globally):
+```
+$ poetry add poethepoet --group dev
+```
+
+The nice thing about poe (and similar tools) is that you define your tasks inside your `pyproject.toml`.
+
+These tasks might be formatting (with black), linting, running tests etc.
+
+Poe has a few different ways to define tasks, but here is a starter. This is the most complex way to define tasks but gives us control. Add this snippet to `pyproject.toml`:
+```
+[tool.poe.tasks.format]
+sequence = ["black .", "ruff --select I --fix ."]
+help = "Format all code with black and sort imports with ruff"
+default_item_type = "cmd"
+
+[tool.poe.tasks.lint]
+sequence = ["ruff check .", "black --check .", "mypy project_name"]
+help = "Run all linting, including ruff, black (check only) and mypy"
+default_item_type = "cmd"
+```
+
+Don't forget to replace `project_name` in the linting task with the name of your package. This command runs mypy just on your source code (and not the tests folder).
+
+This setup defines two tasks, `format` and `lint`. You might add another one such as `test`.
+
+We can get poe to list them for us to check they're defined properly:
+```
+$ poetry run poe -h
+```
+
+Then when you have the virtual environment activated (or with poe installed globally), you can run `poe format` and your code will be formatted by black and imports sorted all in one go.

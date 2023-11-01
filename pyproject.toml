@@ -13,6 +13,7 @@ python = "^3.11"
 mypy = "^1.6.1"
 black = "^23.10.1"
 ruff = "^0.1.3"
+poethepoet = "^0.24.1"
 
 [build-system]
 requires = ["poetry-core"]
@@ -20,3 +21,13 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 select = ["E", "F", "I", "N"]
+
+[tool.poe.tasks.format]
+sequence = ["black .", "ruff --select I --fix ."]
+help = "Format all code with black and sort imports with ruff"
+default_item_type = "cmd"
+
+[tool.poe.tasks.lint]
+sequence = ["ruff check .", "black --check .", "mypy opinionated_starter"]
+help = "Run all linting, including ruff, black (check only) and mypy"
+default_item_type = "cmd"
