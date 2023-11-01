@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "opinionated-starter"
+version = "0.1.0"
+description = ""
+authors = ["Dan Clayton <daniel@cl8on.co.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
