@@ -20,6 +20,11 @@ Poetry [generates a file called pyproject.toml](https://python-poetry.org/docs/p
 
 I won't try and introduce Poetry, their documentation will do that best.
 
+Don't forget:
+```
+$ git init
+```
+
 ## 2. Add .gitignore
 
 [Github maintain a nice python .gitignore default](https://github.com/github/gitignore/blob/main/Python.gitignore), so copy and paste it. I won't copy it here as that is another place to keep it up to date.
