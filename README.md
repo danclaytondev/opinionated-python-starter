@@ -104,3 +104,61 @@ $ poetry run poe -h
 ```
 
 Then when you have the virtual environment activated (or with poe installed globally), you can run `poe format` and your code will be formatted by black and imports sorted all in one go.
+
+## 5. Add Dockerfile for deployment such as a web server (Optional)
+
+There are a variety of different ways to deploy code for a project. This example is setting up a Docker image, assuming this Python project is going to be a web server or CLI tool. This doesn't include how you could package up this code and share it as a Python package (but Poetry can help with that).
+
+The Dockerfile below builds a fairly minimal production image, without Poetry and dev dependencies, using a multi-stage Docker build. Your use case might involve a dev container for running tests etc, which you could add as another stage in the build process.
+
+This is not a one-size-fits-all Dockerfile, you may need additional security requirements or dependencies depending on your use case.
+
+We start with a small temporary image to work out what production dependencies we need to install. Poetry sorts that for us.
+
+```
+FROM python:3.11-slim as requirements-stage
+
+WORKDIR /tmp
+
+# https://python-poetry.org/docs#ci-recommendations
+# We are just using poetry to export a requirements.txt so we don't need to worry about virtual environments etc.
+ENV POETRY_VERSION=1.6.1
+RUN pip install poetry
+
+# By only including these, we can cache this image and only rebuild it when we change dependencies, not app code.
+COPY ./pyproject.toml ./poetry.lock* /tmp/
+
+# --without dev means poetry will ignore dependencies in the dev group (see your pyproject.toml)
+RUN poetry export -f requirements.txt --output requirements.txt --without dev --without-hashes
+```
+
+Now we have an image, with a `/tmp/requirements.txt` we can use to install our production dependencies, in a new image.
+
+```
+FROM python:3.11-slim
+
+# stop python print statements from buffering
+ENV PYTHONUNBUFFERED=TRUE
+
+WORKDIR /app
+
+COPY --from=requirements-stage /tmp/requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+
+COPY ./ /app/
+
+# here we read a build argument for app version,
+# and save into an environment variable so we can read it in app code
+ARG APP_VERSION="-"
+ENV APP_VERSION=$APP_VERSION
+
+# If you are building a web app, add a port
+# EXPOSE 8000
+
+CMD ["python -m project_name"]
+```
+
+The full Dockerfile is in the repository.
+
+We also need to add a `.dockerignore`. Take a look at the one committed to this repo. Don't forget to ignore the `Dockerfile` so you don't bust the cache when changing your Dockerfile repeatedly, and `.git`.
